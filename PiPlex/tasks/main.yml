@@ -42,3 +42,16 @@
     service:
       name: plexmediaserver
       state: restarted
+
+  - name: Ensure allow_other can be used by fuse
+    lineinfile:
+      path: /etc/fuse.conf
+      line: 'user_allow_other'
+
+  - name: Ensure mount is present for content directory hosted on another pi
+    mount:
+      path: /mnt/PiTV
+      src: pi@raspberrypi:/mnt/PiTV
+      fstype: fuse.sshfs
+      opts: defaults,uid=1000,gid=1000,allow_other,users
+      state: mounted
