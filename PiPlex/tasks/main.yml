@@ -1,0 +1,44 @@
+---
+  - name: Ensure apt key for repo is present
+    apt_key:
+      url: https://dev2day.de/pms/dev2day-pms.gpg.key
+      state: present
+
+  - name: Ensure apt repo for plex exists
+    apt_repository:
+      repo: deb [arch=armhf] https://dev2day.de/pms/ stretch main
+      state: present
+  - name: Only run "update_cache=yes" if the last one is more than 3600 seconds ago
+    apt:
+      update_cache: yes
+      cache_valid_time: 3600
+
+  - name: Update all packages to the latest version
+    apt:
+      upgrade: dist
+
+  - name: Ensure apt-transport-https is installed
+    apt:
+      name: apt-transport-https
+      state: present
+
+  - name: Ensure armhf support
+    shell: dpkg --add-architecture armhf && touch armhf.enabled
+    args:
+      creates: armhf.enabled
+
+  - name: Ensure plex is installed
+    apt:
+      name: plexmediaserver-installer:armhf
+      state: present
+
+  - name: Ensure Plex runs as pi user
+    lineinfile:
+      path: /etc/default/plexmediaserver.prev
+      regexp: '^PLEX_MEDIA_SERVER_USER='
+      line: 'PLEX_MEDIA_SERVER_USER=pi'
+
+  - name: Ensure Plex is restarted
+    service:
+      name: plexmediaserver
+      state: restarted
